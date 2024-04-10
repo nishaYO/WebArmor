@@ -1,20 +1,22 @@
 {
-    "manifest_version": 3,
-    "name": "WebAvenger",
-    "version": "1.0.0",
-    "permissions": [
-        "declarativeNetRequest"
-    ],
-    "declarative_net_request": {
-        "rule_resources": [
-            {
-                "id": "ruleset_1",
-                "enabled": true,
-                "path": "rules.json"
-            }
-        ]
-    },
-    "action": {
-        "default_popup": "popup.html"
-    }
+  "manifest_version": 3,
+  "name": "WebAvenger",
+  "version": "1.0.0",
+  "permissions": ["declarativeNetRequest", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["*://*/*"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
 }
