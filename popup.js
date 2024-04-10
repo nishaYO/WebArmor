@@ -66,6 +66,15 @@ document.addEventListener("DOMContentLoaded", function () {
             chrome.storage.local.set({ blockedWebsites: JSON.stringify(checkedWebsites) }, function () {
                 console.log("Updated list saved successfully.");
 
+                // Tell background script to update rules.json
+                chrome.runtime.sendMessage({ action: "updateRulesJson" }, function(response) {
+                    if (response && response.success) {
+                        console.log("rules.json updated successfully.");
+                    } else {
+                        console.error("Failed to update rules.json:", response.error);
+                    }
+                });
+
                 // Hide the Add button again
                 addBtn.style.display = "none";
             });
