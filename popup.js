@@ -4,8 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Handle Edit List button click
     editListBtn.addEventListener('click', function () {
-        // Add logic to handle editing the list
-        // This could involve opening a new tab or window to a settings page
     });
 
     // Fetch the list of blocked websites from rules.json
