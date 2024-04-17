@@ -1,7 +1,7 @@
 This is a chrome extension that blocks the most common intrusive websites to provide you the safe browser experience!
 
 ## features:
-- block network requests to most common data fetching websites. 
+- block network requests to most common data fetching and ad showing websites. 
 - user can whitelist and blacklist the websites to block
 - user can block distracting social media sites and user won't be able to access them
 
