@@ -19,7 +19,12 @@ document.addEventListener("DOMContentLoaded", function () {
       // Fetch the list of blocked websites from local storage
       chrome.storage.local.get("blockedWebsites", function (data) {
         let blockedWebsites = JSON.parse(data.blockedWebsites || "[]");
-        displayBlockedWebsites(blockedWebsites);
+        blockedWebsites = cleanUrls(blockedWebsites);
+        // remove duplicates
+        const uniqueBlockedWebsites = blockedWebsites.filter(
+          (website, index) => blockedWebsites.indexOf(website) === index
+        );
+        displayBlockedWebsites(uniqueBlockedWebsites);
       });
 
       editListBtn.textContent = "Save";
@@ -35,7 +40,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Append newly added websites to the list
       checkedWebsites.push(...addedWebsites);
-
+      // remove duplicates
+      const uniqueCheckedWebsites = checkedWebsites.filter(
+        (website, index) => checkedWebsites.indexOf(website) === index
+      );
+      // format all websites
+      const formattedWebsites = uniqueCheckedWebsites.map(formatWebsiteURL);
       // Hide the list
       blockedWebsitesContainer.innerHTML = "";
 
@@ -44,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Store the updated list in Chrome storage
       chrome.storage.local.set(
-        { blockedWebsites: JSON.stringify(checkedWebsites) },
+        { blockedWebsites: JSON.stringify(formattedWebsites) },
         function () {
           console.log("Updated list saved successfully.");
 
@@ -84,9 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const newWebsite = addWebsiteInput.value.trim();
       if (newWebsite !== "") {
         // Format the new website URL
-        const formattedWebsite = formatWebsiteURL(newWebsite);
-        addedWebsites.push(formattedWebsite); 
-        
+        addedWebsites.push(newWebsite);
+
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.id = `website-${blockedWebsitesContainer.children.length + 1}`;
@@ -113,8 +122,25 @@ document.addEventListener("DOMContentLoaded", function () {
       website = "*://" + website;
     }
     if (!website.endsWith("/*")) {
-      website += "/*";
+      if (!website.endsWith("/")) {
+        website += "/*";
+      } else {
+        website += "*";
+      }
     }
     return website;
+  }
+
+  // func to clean the website url to show to the user
+  function cleanUrls(urls) {
+    return urls.map((url) => {
+      // Remove '*' at the beginning and end of the URL
+      let cleanedUrl = url.replace(/^\*+/, "").replace(/\*+$/, "");
+      // Remove '://' if it exists
+      cleanedUrl = cleanedUrl.replace(/:\/\//, "");
+      // Remove leading and trailing dots
+      cleanedUrl = cleanedUrl.replace(/^\.*|\.*$/g, "");
+      return cleanedUrl;
+    });
   }
 });

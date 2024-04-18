@@ -13,53 +13,27 @@ const defaultBlockedWebsites = [
   "*://.zedo.com/*",
   "*://.googletagmanager.com/*",
   "*://.px.ads.linkedin.com/*",
-  "*://.twitter.com/*"
+  "*://.twitter.com/*",
 ];
 
 chrome.runtime.onInstalled.addListener(function () {
   // Load the list from Chrome storage
   chrome.storage.local.get("blockedWebsites", function (data) {
-    let blockedWebsites = data.blockedWebsites;
-    console.log(blockedWebsites)
-    // if key not found then store default websites as blocked websites
-    if (!blockedWebsites) {
+    try {
+      let blockedWebsites = JSON.parse(data.blockedWebsites);
+      console.log(blockedWebsites);
+      formatAndBlockWebsites(blockedWebsites);
+    } catch (error) {
+      // if first time visit then block default websites
       blockedWebsites = defaultBlockedWebsites;
       chrome.storage.local.set(
         { blockedWebsites: JSON.stringify(defaultBlockedWebsites) },
-        () => {console.log("default websites stored in localstorage.")}
+        () => {
+          console.log("default websites stored in localstorage.");
+        }
       );
+      formatAndBlockWebsites(blockedWebsites);
     }
-
-    // Convert to array if it's not already
-    if (!Array.isArray(blockedWebsites)) {
-      // here is some problem that the list of blockedwebsites is shown
-      // console.log the blockedwebsites and then fix the issue with array type
-        blockedWebsites = [blockedWebsites];
-        chrome.storage.local.set(
-          { blockedWebsites: JSON.stringify(blockedWebsites) },
-          () => {
-            console.log("Converted 'blockedWebsites' to array.");
-          }
-        );
-      }
-
-    // Format the list into the required JSON format for declarativeNetRequest
-    const formattedRules = blockedWebsites.map((website, index) => ({
-      id: hash(website),
-      priority: 1,
-      action: {
-        type: "block",
-      },
-      condition: {
-        urlFilter: website,
-      },
-    }));
-
-    // Set up the rules for blocking websites
-    chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: formattedRules,
-      removeRuleIds: [], // No rules to remove initially
-    });
   });
 });
 
@@ -70,15 +44,26 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   }
 });
 
-function hash(str) {
-  let hash = 0;
-  if (str.length === 0) {
-    return hash;
-  }
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
+async function formatAndBlockWebsites(blockedWebsites) {
+  // Format the list into the required JSON format for declarativeNetRequest
+  const formattedRules = blockedWebsites.map((website, index) => ({
+    id: index + 1,
+    priority: 1,
+    action: {
+      type: "block",
+    },
+    condition: {
+      urlFilter: website,
+    },
+  }));
+  console.log(formattedRules);
+
+  let oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+  const oldRuleIds = oldRules.map((rule) => rule.id);
+  console.log("oldRules", oldRules);
+  // Set up the rules for blocking websites
+  chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: oldRuleIds, 
+    addRules: formattedRules,
+  });
 }
